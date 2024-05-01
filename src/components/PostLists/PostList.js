@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import './PostList.css';
 
 function PostList({ posts }) {
@@ -17,13 +18,14 @@ function PostList({ posts }) {
         post.title.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
-    const sortedPosts = filteredPosts.sort((a, b) => {
-        if (sortKey === 'upvotes') {
-            return b.upvotes - a.upvotes; // descending order for upvotes
-        }
-        // default to sorting by createdAt in descending order
-        return new Date(b.createdAt) - new Date(a.createdAt);
-    });
+    const sortedPosts = useMemo(() => {
+        return filteredPosts.sort((a, b) => {
+            if (sortKey === 'upvotes') {
+                return b.upvotes - a.upvotes; // descending order for upvotes
+            }
+            return new Date(b.createdAt) - new Date(a.createdAt); // default to sorting by createdAt in descending order
+        });
+    }, [filteredPosts, sortKey]);
 
     return (
         <div>
@@ -41,23 +43,24 @@ function PostList({ posts }) {
                 {sortedPosts.length > 0 ? (
                     sortedPosts.map((post, index) => (
                         <div key={index} className="post-item">
-                            <p className="post-meta">Created at: {new Date(post.createdAt).toLocaleString()}</p>
-                            <h3>{post.title}</h3>
+                            <Link to={`/post/${post.id}`} className="post-link">
+                                <h3>{post.title}</h3>
+                            </Link>
                             <p>{post.content}</p>
-                            {post.imageUrl && <img src={post.imageUrl} alt={post.title} />}
+                            {post.imageUrl && <img src={post.imageUrl} alt={post.title} style={{ maxWidth: '100%', height: 'auto' }} />}
                             <p className="post-meta">Upvotes: {post.upvotes}</p>
                             {post.comments && post.comments.length > 0 && (
                                 <div>
                                     <h4>Comments:</h4>
                                     {post.comments.map((comment, index) => (
-                                        <p key={index}><b>{comment.id}</b>: {comment.text}</p>
+                                        <p key={index}><b>{comment.user}:</b> {comment.text}</p>
                                     ))}
                                 </div>
                             )}
                         </div>
                     ))
                 ) : (
-                    <h3>No posts</h3>
+                    <h3>No posts found</h3>
                 )}
             </div>
         </div>
